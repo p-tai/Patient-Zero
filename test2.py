@@ -1,5 +1,5 @@
 #Prototype2
-#Created By: Paul Tai
+#Created By: Paul Tai, Matt Robinson, Ed Choi
 #HackNY - 09.29.2013
 
 import pygame, sys, random
@@ -101,12 +101,16 @@ player = Player(playerX, playerY)
 while True:
     runClock += 1
     windowSurfaceObj.fill(blackColor)
-    
-    msgSurfaceObj2 = fontObj.render("Health " + str(HEALTH) + " of 10",False,whiteColor)
+    msgSurfaceObj = fontObj.render("Score: " + str(score),False,whiteColor)
+    msgSurfaceObj2 = fontObj.render("Health: " + str(HEALTH) + " of 10",False,whiteColor)
+    textRect = msgSurfaceObj.get_rect()
     textRect2 = msgSurfaceObj2.get_rect()
+    textRect = (X_MAX/2, Y_MAX-50)
     textRect2.center = (X_MAX/2, Y_MAX-100)
+    
     player.setPos(playerX, playerY)
     windowSurfaceObj.blit(player.sprite, player.rect)
+    windowSurfaceObj.blit(msgSurfaceObj,textRect)
     windowSurfaceObj.blit(msgSurfaceObj2,textRect2)
     pygame.draw.rect(windowSurfaceObj,whiteColor,player.rect,1)
     
