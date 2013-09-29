@@ -191,11 +191,9 @@ while True:
     for lunger in lungers:
         pygame.draw.circle(windowSurfaceObj, blueColor, (lunger.xpos,lunger.ypos),infectRange*2,1)
         windowSurfaceObj.blit(lunger.sprite, lunger.rect)
-        if len(humans) != 0:
-            min = humans[0]
         for human in humans:
             if( sqrt(((lunger.xpos - human.xpos)**2 + (lunger.ypos-human.ypos)**2)) < (infectRange*2) ):
-                lunger.move(human.xpos, human.ypos)
+                lunger.setPos(human.xpos, human.ypos)
                 score+=1
                 typeZ = int(random.random()*7)
                 temp =humans.pop(humans.index(human))
