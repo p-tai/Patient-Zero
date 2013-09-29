@@ -24,7 +24,7 @@ direction = 1
 infectRange = 15
 score = 0
 hunger = 0
-hungertime = 100
+hungertime = 60
 
 windowSurfaceObj = pygame.display.set_mode((X_MAX,Y_MAX))
 
@@ -214,7 +214,7 @@ while True:
         for human in humans:
             if runClock % (FPS*1) == 0:
                 hunger += 1
-            if hunger >= hungertime:
+            if hunger >= hungertime+50:
                 hunger = 0
                 lungers.pop(lungers.index(lunger))
                 break
