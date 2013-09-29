@@ -65,7 +65,7 @@ class Entity(object):
     def move(self, xdelt=0, ydelt=0):
         self.xpos += xdelt
         self.ypos += ydelt
-        self.rect.center = (xpos, ypos)
+        self.rect.center = (self.xpos, self.ypos)
 
     def setPos(self, xpos, ypos):
         self.xpos = xpos
@@ -73,7 +73,7 @@ class Entity(object):
         self.rect.center = (xpos, ypos)
 
 class Zombie(Entity):
-    def __init__(self, xpos, ypostion, speed=ZSPEED, sprite=fontObj.render("Z",False,whiteColor)):
+    def __init__(self, xpos, ypos, speed=ZSPEED, sprite=fontObj.render("Z",False,whiteColor)):
         super(Zombie, self).__init__(xpos, ypos, speed, sprite)
 
 class Lunger(Zombie):
@@ -122,7 +122,8 @@ while True:
         for zombie in zombies:
             distance = sqrt(((zombie.xpos - human.xpos)**2 + (zombie.ypos-human.ypos)**2))
             if distance < infectRange :
-                zombies.append(humans.pop(humans.index(human)))
+                temp = humans.pop(humans.index(human))
+                zombies.append(Zombie(temp.xpos, temp.ypos))
                 score+=1
                 break
             if distance < closest:
@@ -130,16 +131,16 @@ while True:
                 closeZed = zombie
         
         if(closeZed == None):
-            human.ypos += int(random.random()*5)
+            human.move(0, int(random.random()*5))
         else:
             if( human > closeZed.xpos ):
-                human.xpos += 3
+                human.move(3, 0)
             else:
-                human.xpos -= 3
+                human.move(-3, 0)
             if( human.ypos > closeZed.ypos ):
-                human.ypos += 3
+                human.move(0, 3)
             else:
-                human.ypos -= 3
+                human.move(0, -3)
     
     if alarm >= 5:
         alarm -= 5
@@ -179,33 +180,31 @@ while True:
                     target = human
             if( target != None ):
                 if( zombie.xpos > target.xpos ):
-                    zombie.xpos -= 2
+                    zombie.move(-zombie.speed, 0)
                 else:
-                    zombie.xpos += 2
+                    zombie.move(zombie.speed, 0)
                 if( zombie.ypos > target.ypos ):
-                    zombie.ypos -= 2
+                    zombie.move(0, -zombie.speed)
                 else:
-                    zombie.ypos += 2
+                    zombie.move(0, zombie.speed)
     
     for lunger in lungers:
-        #ZOMBIES.append(LUNGERS.pop(LUNGERS.index(lunger)))
         pygame.draw.circle(windowSurfaceObj, blueColor, (lunger.xpos,lunger.ypos),infectRange*2,1)
         windowSurfaceObj.blit(lunger.sprite, lunger.rect)
         if len(humans) != 0:
             min = humans[0]
         for human in humans:
-            if( sqrt(((lunger.xpos - human.ypos)**2 + (lunger.ypos-human.ypos)**2)) < (infectRange*2) ):
-                lunger.xpos=human.xpos
-                lunger.ypos=human.ypos
+            if( sqrt(((lunger.xpos - human.xpos)**2 + (lunger.ypos-human.ypos)**2)) < (infectRange*2) ):
+                lunger.move(human.xpos, human.ypos)
                 score+=1
                 typeZ = int(random.random()*7)
                 temp =humans.pop(humans.index(human))
                 if(typeZ == 5):
-                    lungers.append(temp)
+                    lungers.append(Lunger(temp.xpos, temp.ypos))
                 if(typeZ == 6):
-                    chasers.append(temp)
+                    chasers.append(Chaser(temp.xpos, temp.ypos))
                 else:
-                    zombies.append(temp)
+                    zombies.append(Zombie(temp.xpos, temp.ypos))
                 break    
 
     for zombie in chasers:
@@ -213,13 +212,13 @@ while True:
         windowSurfaceObj.blit(zombie.sprite,zombie.rect)
         
         if( zombie.xpos > mousex ):
-            zombie.xpos -= 3
+            zombie.move(-zombie.speed, 0)
         else:
-            zombie.xpos += 3
+            zombie.move(zombie.speed, 0)
         if( zombie.ypos > mousey ):
-            zombie.ypos -= 3
+            zombie.move(0, -zombie.speed)
         else:
-            zombie.ypos += 3
+            zombie.move(0, zombie.speed)
                     
         for soldier in soldiers:
             if( sqrt(((zombie.xpos - soldier.xpos)**2 + (zombie.ypos-soldier.ypos)**2)) < (infectRange) ):
@@ -227,11 +226,11 @@ while True:
                 score+=1
                 typeZ = int(random.random()*7)
                 if(typeZ == 3):
-                    lungers.append(temp)
+                    lungers.append(Lunger(temp.xpos, temp.ypos))
                 if(typeZ == 4):
-                    chasers.append(temp)
+                    chasers.append(Chaser(temp.xpos, temp.ypos))
                 else:
-                    zombies.append(temp)
+                    zombies.append(Zombie(temp.xpos, temp.ypos))
                 break
         for human in humans:
             if( sqrt(((zombie.xpos - human.xpos)**2 + (zombie.ypos-human.ypos)**2)) < (infectRange) ):
@@ -239,11 +238,11 @@ while True:
                 score+=1
                 typeZ = int(random.random()*7)
                 if(typeZ == 3):
-                    lungers.append(temp)
+                    lungers.append(Lunger(temp.xpos, temp.ypos))
                 if(typeZ == 4):
-                    chasers.append(temp)
+                    chasers.append(Chaser(temp.xpos, temp.ypos))
                 else:
-                    zombies.append(temp)
+                    zombies.append(Zombie(temp.xpos, temp.ypos))
                 break
         
     
@@ -292,11 +291,11 @@ while True:
             temp = humans.pop(humans.index(human))
             typeZ = int(random.random()*7)
             if(typeZ == 3):
-                lungers.append(temp)
+                lungers.append(Lunger(temp.xpos, temp.ypos))
             if(typeZ == 4):
-                chasers.append(temp)
+                chasers.append(Chaser(temp.xpos, temp.ypos))
             else:
-                zombies.append(temp)
+                zombies.append(Zombie(temp.xpos, temp.ypos))
             HEALTH+=1
             score+=1
                     
@@ -305,11 +304,11 @@ while True:
             temp = soldiers.pop(soldiers.index(soldier))
             typeZ = int(random.random()*7)
             if(typeZ == 3):
-                lungers.append(temp)
+                lungers.append(Lunger(temp.xpos, temp.ypos))
             if(typeZ == 4):
-                chasers.append(temp)
+                chasers.append(Chaser(temp.xpos, temp.ypos))
             else:
-                zombies.append(temp)
+                zombies.append(Zombie(temp.xpos, temp.ypos))
             HEALTH+=1
             score+=1
 
