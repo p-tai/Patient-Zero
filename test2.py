@@ -10,15 +10,16 @@ pygame.init()
 fpsClock = pygame.time.Clock()
 X_MAX = 800
 Y_MAX = 600
-ZOMBIES = []
-LUNGERS = []
-CHASERS = []
-HUMANS = []
-SOLDIERS = []
-BULLETS = []
-HEALTH = 10
+zombies = []
+lungers = []
+chasers = []
+humans = []
+soldiers = []
+bullets = []
 FPS = 60
-speed = 2
+ZSPEED = 2
+HSPEED = 3
+HEALTH = 10
 direction = 1
 infectRange = 15
 score = 0
@@ -45,256 +46,293 @@ runClock = 0
 TEXTCOLOR = "white"
 fontObj = pygame.font.Font('freesansbold.ttf',32)
 
+class Entity(object):
+    def __init__(self, xpos, ypos, speed, sprite=None):
+        self.speed = speed
+        self.xpos = xpos
+        self.ypos = ypos
+        if sprite is not None:
+            self.sprite = sprite
+            self.rect = sprite.get_rect()
+            self.rect.center = (xpos, ypos)
+
+    def kill(self, ent):
+        pass
+
+    def get_position(self):
+        return (self.xpos, self.ypos)
+
+    def move(self, xdelt=0, ydelt=0):
+        self.xpos += xdelt
+        self.ypos += ydelt
+        self.rect.center = (self.xpos, self.ypos)
+
+    def setPos(self, xpos, ypos):
+        self.xpos = xpos
+        self.ypos = ypos
+        self.rect.center = (xpos, ypos)
+
+class Zombie(Entity):
+    def __init__(self, xpos, ypos, speed=ZSPEED, sprite=fontObj.render("Z",False,whiteColor)):
+        super(Zombie, self).__init__(xpos, ypos, speed, sprite)
+
+class Lunger(Zombie):
+    def __init__(self, xpos, ypos, speed=ZSPEED, sprite=fontObj.render("Z",False,blueColor)):
+        super(Lunger, self).__init__(xpos, ypos, speed, sprite)
+
+class Chaser(Zombie):
+    def __init__(self, xpos, ypos, speed=ZSPEED, sprite=fontObj.render("Z",False,yellowColor)):
+        super(Chaser, self).__init__(xpos, ypos, speed, sprite)
+
+class Player(Entity):
+    def __init__(self, xpos, ypos, speed=HSPEED, sprite=fontObj.render("P",False,whiteColor)):
+        super(Player, self).__init__(xpos, ypos, speed, sprite)
+
+class Human(Entity):
+    def __init__(self, xpos, ypos, speed=HSPEED, sprite=fontObj.render("H", False, whiteColor)):
+        super(Human, self).__init__(xpos, ypos, speed, sprite)
+
+class Soldier(Human):
+    def __init__(self, xpos, ypos, speed=0, sprite=fontObj.render("S",False,redColor)):
+        super(Soldier, self).__init__(xpos, ypos, speed, sprite)
+
+player = Player(playerX, playerY)
+
 while True:
-	runClock += 1
-	windowSurfaceObj.fill(blackColor)
-	
-	msgSurfaceObj = fontObj.render("P",False,whiteColor)
-	msgSurfaceObj2 = fontObj.render("Health " + str(HEALTH) + " of 10",False,whiteColor)
-	textRect = msgSurfaceObj.get_rect()
-	textRect2 = msgSurfaceObj2.get_rect()
-	textRect2.center = (X_MAX/2, Y_MAX-100)
-	textRect.center = (playerX, playerY)
-	windowSurfaceObj.blit(msgSurfaceObj,textRect)
-	windowSurfaceObj.blit(msgSurfaceObj2,textRect2)
-	pygame.draw.rect(windowSurfaceObj,whiteColor,textRect,1)
-	
-	for human in HUMANS:
-		if( human[0] > X_MAX or human[1] > Y_MAX or human[1] < 0 ):
-			alarm += 1
-			HUMANS.pop(HUMANS.index(human))
-			break
-		humanSprite = fontObj.render("H",False,whiteColor)
-		textRect.center = (human[0],human[1])
-		windowSurfaceObj.blit(humanSprite,textRect)
-		distance = None
-		closest = 50
-		closeZed = None
-		for zombie in ZOMBIES:
-			distance = sqrt(((zombie[0] - human[0])**2 + (zombie[1]-human[1])**2))
-			if( distance < infectRange ):
-				ZOMBIES.append(HUMANS.pop(HUMANS.index(human)))
-				score+=1
-				break
-			if( distance < closest ):
-				closest = distance
-				closeZed = zombie
-		
-		if(closeZed == None):
-			human[1] += int(random.random()*5)
-		else:
-			if( human > closeZed[0] ):
-				human[0] += 3
-			else:
-				human[0] -= 3
-			if( human[1] > closeZed[1] ):
-				human[1] += 3
-			else:
-				human[1] -= 3
-	
-	if alarm >= 5:
-		alarm -= 5
-		tempX = int(random.random()*(X_MAX-20)+20)
-		SOLDIERS.append([tempX,5])
-		tempY = int(random.random()*(Y_MAX-20)+20)
-		SOLDIERS.append([5,tempY])
-	
-	for soldier in SOLDIERS:
-		soldierSprite = fontObj.render("S",False,redColor)
-		
-		textRect.center = (soldier[0],soldier[1])
-		windowSurfaceObj.blit(soldierSprite,textRect)
-		
-		if(runClock % (FPS*2) == 0):
-			if(len(CHASERS) > 0):
-				targetZed = CHASERS[int(random.random()*len(CHASERS))]
-				pygame.draw.line(windowSurfaceObj, redColor, (soldier[0], soldier[1]), (targetZed[0],targetZed[1]),2)
-				CHASERS.pop(CHASERS.index(targetZed))
-			else:
-				target = int(random.random()*((len(ZOMBIES) +1)))
-				if (target < len(ZOMBIES)):
-					targetZed = ZOMBIES[target]
-					pygame.draw.line(windowSurfaceObj, redColor, (soldier[0], soldier[1]), (targetZed[0],targetZed[1]),2)
-					ZOMBIES.pop(ZOMBIES.index(targetZed))
-				elif(target >= (len(ZOMBIES))):
-					HEALTH -= 1
-					pygame.draw.line(windowSurfaceObj, redColor, (soldier[0],soldier[1]),(playerX,playerY),3)
-				
-			
+    runClock += 1
+    windowSurfaceObj.fill(blackColor)
+    
+    msgSurfaceObj2 = fontObj.render("Health " + str(HEALTH) + " of 10",False,whiteColor)
+    textRect2 = msgSurfaceObj2.get_rect()
+    textRect2.center = (X_MAX/2, Y_MAX-100)
+    player.setPos(playerX, playerY)
+    windowSurfaceObj.blit(player.sprite, player.rect)
+    windowSurfaceObj.blit(msgSurfaceObj2,textRect2)
+    pygame.draw.rect(windowSurfaceObj,whiteColor,player.rect,1)
+    
+    for human in humans:
+        if human.xpos > X_MAX or human.ypos > Y_MAX or human.ypos < 0:
+            alarm += 1
+            humans.pop(humans.index(human))
+            break
+        windowSurfaceObj.blit(human.sprite, human.rect)
+        distance = None
+        closest = 50
+        closeZed = None
+        for zombie in zombies:
+            distance = sqrt(((zombie.xpos - human.xpos)**2 + (zombie.ypos-human.ypos)**2))
+            if distance < infectRange :
+                temp = humans.pop(humans.index(human))
+                zombies.append(Zombie(temp.xpos, temp.ypos))
+                score+=1
+                break
+            if distance < closest:
+                closest = distance
+                closeZed = zombie
+        
+        if(closeZed == None):
+            human.move(0, int(random.random()*5))
+        else:
+            if( human > closeZed.xpos ):
+                human.move(3, 0)
+            else:
+                human.move(-3, 0)
+            if( human.ypos > closeZed.ypos ):
+                human.move(0, 3)
+            else:
+                human.move(0, -3)
+    
+    if alarm >= 5:
+        alarm -= 5
+        tempX = int(random.random()*(X_MAX-20)+20)
+        soldiers.append(Soldier(tempX, 5))
+        tempY = int(random.random()*(Y_MAX-20)+20)
+        soldiers.append(Soldier(5, tempY))
+    
+    for soldier in soldiers:
+        windowSurfaceObj.blit(soldier.sprite, soldier.rect)
+        
+        if(runClock % (FPS*2) == 0):
+            if(len(chasers) > 0):
+                targetZed = chasers[int(random.random()*len(chasers))]
+                pygame.draw.line(windowSurfaceObj, redColor, (soldier.xpos, soldier.ypos), (targetZed.xpos,targetZed.ypos), 2)
+                chasers.pop(chasers.index(targetZed))
+            else:
+                target = int(random.random()*((len(zombies) +1)))
+                if (target < len(zombies)):
+                    targetZed = zombies[target]
+                    pygame.draw.line(windowSurfaceObj, redColor, (soldier.xpos, soldier.ypos), (targetZed.xpos, targetZed.ypos), 2)
+                    zombies.pop(zombies.index(targetZed))
+                elif(target >= (len(zombies))):
+                    HEALTH -= 1
+                    pygame.draw.line(windowSurfaceObj, redColor, (soldier.xpos, soldier.ypos),(playerX, playerY), 3)
+                
+            
 
-	for zombie in ZOMBIES:
-		zombieSprite = fontObj.render("Z",False,whiteColor)
-		pygame.draw.circle(windowSurfaceObj, whiteColor, (zombie[0],zombie[1]),infectRange,1)
-		textRect.center = (zombie[0],zombie[1])
-		windowSurfaceObj.blit(zombieSprite,textRect)
-		if len(HUMANS) != 0:
-			target = HUMANS[0]
-			min = sqrt((zombie[0] - human[0])**2 + (zombie[1]-human[1])**2)
-			for human in HUMANS:
-				if( sqrt(((zombie[0] - human[0])**2 + (zombie[1]-human[1])**2)) < min ):
-					target = human
-			if( target != None ):
-				if( zombie[0] > target[0] ):
-					zombie[0] -= 2
-				else:
-					zombie[0] += 2
-				if( zombie[1] > target[1] ):
-					zombie[1] -= 2
-				else:
-					zombie[1] += 2
-	
-	for lunger in LUNGERS:
-		ZOMBIES.append(LUNGERS.pop(LUNGERS.index(lunger)))
-	"""	pygame.draw.circle(windowSurfaceObj, blueColor, (lunger[0],lunger[1]),infectRange*2,1)
-		zombieSprite = fontObj.render("Z",False,blueColor)
-		textRect.center = (lunger[0],lunger[1])
-		windowSurfaceObj.blit(zombieSprite,textRect)
-		if len(HUMANS) != 0:
-			min = HUMANS[0]
-		for human in HUMANS:
-			if( sqrt(((lunger[0] - human[0])**2 + (lunger[1]-human[1])**2)) < (infectRange*2) ):
-				lunger[0]=human[0]
-				lunger[1]=human[1]
-				score+=1
-				typeZ = int(random.random()*7)
-				temp =HUMANS.pop(HUMANS.index(human))
-				if(typeZ == 5):
-					LUNGERS.append(temp)
-				if(typeZ == 6):
-					CHASERS.append(temp)
-				else:
-					ZOMBIES.append(temp)
-				break	
-	"""
+    for zombie in zombies:
+        pygame.draw.circle(windowSurfaceObj, whiteColor, (zombie.xpos,zombie.ypos),infectRange,1)
+        windowSurfaceObj.blit(zombie.sprite,zombie.rect)
+        if len(humans) != 0:
+            target = humans[0]
+            min = sqrt((zombie.xpos - human.xpos)**2 + (zombie.ypos-human.ypos)**2)
+            for human in humans:
+                if( sqrt(((zombie.xpos - human.xpos)**2 + (zombie.ypos-human.ypos)**2)) < min ):
+                    target = human
+            if( target != None ):
+                if( zombie.xpos > target.xpos ):
+                    zombie.move(-zombie.speed, 0)
+                else:
+                    zombie.move(zombie.speed, 0)
+                if( zombie.ypos > target.ypos ):
+                    zombie.move(0, -zombie.speed)
+                else:
+                    zombie.move(0, zombie.speed)
+    
+    for lunger in lungers:
+        pygame.draw.circle(windowSurfaceObj, blueColor, (lunger.xpos,lunger.ypos),infectRange*2,1)
+        windowSurfaceObj.blit(lunger.sprite, lunger.rect)
+        if len(humans) != 0:
+            min = humans[0]
+        for human in humans:
+            if( sqrt(((lunger.xpos - human.xpos)**2 + (lunger.ypos-human.ypos)**2)) < (infectRange*2) ):
+                lunger.move(human.xpos, human.ypos)
+                score+=1
+                typeZ = int(random.random()*7)
+                temp =humans.pop(humans.index(human))
+                if(typeZ == 5):
+                    lungers.append(Lunger(temp.xpos, temp.ypos))
+                if(typeZ == 6):
+                    chasers.append(Chaser(temp.xpos, temp.ypos))
+                else:
+                    zombies.append(Zombie(temp.xpos, temp.ypos))
+                break    
 
-	for zombie in CHASERS:
-		zombieSprite = fontObj.render("Z",False,yellowColor)
-		pygame.draw.circle(windowSurfaceObj, yellowColor, (zombie[0],zombie[1]),infectRange,1)
-		textRect.center = (zombie[0],zombie[1])
-		windowSurfaceObj.blit(zombieSprite,textRect)
-		
-		if( zombie[0] > mousex ):
-			zombie[0] -= 3
-		else:
-			zombie[0] += 3
-		if( zombie[1] > mousey ):
-			zombie[1] -= 3
-		else:
-			zombie[1] += 3
-					
-		for soldier in SOLDIERS:
-			if( sqrt(((zombie[0] - soldier[0])**2 + (zombie[1]-soldier[1])**2)) < (infectRange) ):
-				temp = SOLDIERS.pop(SOLDIERS.index(soldier))
-				score+=1
-				typeZ = int(random.random()*7)
-				if(typeZ == 3):
-					LUNGERS.append(temp)
-				if(typeZ == 4):
-					CHASERS.append(temp)
-				else:
-					ZOMBIES.append(temp)
-				break
-		for human in HUMANS:
-			if( sqrt(((zombie[0] - human[0])**2 + (zombie[1]-human[1])**2)) < (infectRange) ):
-				temp = HUMANS.pop(HUMANS.index(human))
-				score+=1
-				typeZ = int(random.random()*7)
-				if(typeZ == 3):
-					LUNGERS.append(temp)
-				if(typeZ == 4):
-					CHASERS.append(temp)
-				else:
-					ZOMBIES.append(temp)
-				break
-		
-	
-	
-	if (HEALTH <= 0):
-		pygame.event.post(pygame.event.Event(QUIT))
-			
-	for event in pygame.event.get():
-		if event.type == QUIT:
-				msg = "\nGAME OVER" + "\nZOMBIES SPAWNED = " + str(score)
-				print(msg)
-				pygame.quit()
-				sys.exit()          
-		elif event.type == MOUSEMOTION:
-			mousex, mousey = event.pos
-					
-			#elif event.type == MOUSEBUTTONUP:
-			#		if event.button == 1:
-						#bite human
-		elif event.type == KEYDOWN:
-			if event.key == K_ESCAPE:
-				pygame.event.post(pygame.event.Event(QUIT))
-			#if event.key == K_LEFT:
-			#	playerX -= speed
-			#if event.key == K_RIGHT:
-			#	playerX +=speed
-			#if event.key == K_UP:
-			#	playerY -= speed
-			#if event.key == K_DOWN:
-			#	playerY += speed
-			#if event.key == K_SPACE:
-			#	pass
-			
-	keys_pressed = pygame.key.get_pressed()
-	if keys_pressed[K_a]:
-		playerX -= speed
-	if keys_pressed[K_d]:
-		playerX += speed
-	if keys_pressed[K_w]:
-		playerY -= speed
-	if keys_pressed[K_s]:
-		playerY += speed	
+    for zombie in chasers:
+        pygame.draw.circle(windowSurfaceObj, yellowColor, (zombie.xpos,zombie.ypos),infectRange,1)
+        windowSurfaceObj.blit(zombie.sprite,zombie.rect)
+        
+        if( zombie.xpos > mousex ):
+            zombie.move(-zombie.speed, 0)
+        else:
+            zombie.move(zombie.speed, 0)
+        if( zombie.ypos > mousey ):
+            zombie.move(0, -zombie.speed)
+        else:
+            zombie.move(0, zombie.speed)
+                    
+        for soldier in soldiers:
+            if( sqrt(((zombie.xpos - soldier.xpos)**2 + (zombie.ypos-soldier.ypos)**2)) < (infectRange) ):
+                temp = soldiers.pop(soldiers.index(soldier))
+                score+=1
+                typeZ = int(random.random()*7)
+                if(typeZ == 3):
+                    lungers.append(Lunger(temp.xpos, temp.ypos))
+                if(typeZ == 4):
+                    chasers.append(Chaser(temp.xpos, temp.ypos))
+                else:
+                    zombies.append(Zombie(temp.xpos, temp.ypos))
+                break
+        for human in humans:
+            if( sqrt(((zombie.xpos - human.xpos)**2 + (zombie.ypos-human.ypos)**2)) < (infectRange) ):
+                temp = humans.pop(humans.index(human))
+                score+=1
+                typeZ = int(random.random()*7)
+                if(typeZ == 3):
+                    lungers.append(Lunger(temp.xpos, temp.ypos))
+                if(typeZ == 4):
+                    chasers.append(Chaser(temp.xpos, temp.ypos))
+                else:
+                    zombies.append(Zombie(temp.xpos, temp.ypos))
+                break
+        
+    
+    
+    if (HEALTH <= 0):
+        pygame.event.post(pygame.event.Event(QUIT))
+            
+    for event in pygame.event.get():
+        if event.type == QUIT:
+                msg = "\nGAME OVER" + "\nZOMBIES SPAWNED = " + str(score)
+                print(msg)
+                pygame.quit()
+                sys.exit()          
+        elif event.type == MOUSEMOTION:
+            mousex, mousey = event.pos
+                    
+            #elif event.type == MOUSEBUTTONUP:
+            #        if event.button == 1:
+                        #bite human
+        elif event.type == KEYDOWN:
+            if event.key == K_ESCAPE:
+                pygame.event.post(pygame.event.Event(QUIT))
+            #if event.key == K_LEFT:
+            #    playerX -= speed
+            #if event.key == K_RIGHT:
+            #    playerX +=speed
+            #if event.key == K_UP:
+            #    playerY -= speed
+            #if event.key == K_DOWN:
+            #    playerY += speed
+            #if event.key == K_SPACE:
+            #    pass
+            
+    keys_pressed = pygame.key.get_pressed()
+    if keys_pressed[K_a]:
+        playerX -= player.speed
+    if keys_pressed[K_d]:
+        playerX += player.speed
+    if keys_pressed[K_w]:
+        playerY -= player.speed
+    if keys_pressed[K_s]:
+        playerY += player.speed    
 
-	for human in HUMANS:
-		if( sqrt((playerX - human[0])**2 + (playerY-human[1])**2) < (2*infectRange) ):
-			temp = HUMANS.pop(HUMANS.index(human))
-			typeZ = int(random.random()*7)
-			if(typeZ == 3):
-				LUNGERS.append(temp)
-			if(typeZ == 4):
-				CHASERS.append(temp)
-			else:
-				ZOMBIES.append(temp)
-			HEALTH+=1
-			score+=1
-					
-	for soldier in SOLDIERS:
-		if( sqrt((playerX - soldier[0])**2 + (playerY-soldier[1])**2) < (2*infectRange) ):
-			temp = SOLDIERS.pop(SOLDIERS.index(soldier))
-			typeZ = int(random.random()*7)
-			if(typeZ == 3):
-				LUNGERS.append(temp)
-			if(typeZ == 4):
-				CHASERS.append(temp)
-			else:
-				ZOMBIES.append(temp)
-			HEALTH+=1
-			score+=1
+    for human in humans:
+        if( sqrt((playerX - human.xpos)**2 + (playerY-human.ypos)**2) < (2*infectRange) ):
+            temp = humans.pop(humans.index(human))
+            typeZ = int(random.random()*7)
+            if(typeZ == 3):
+                lungers.append(Lunger(temp.xpos, temp.ypos))
+            if(typeZ == 4):
+                chasers.append(Chaser(temp.xpos, temp.ypos))
+            else:
+                zombies.append(Zombie(temp.xpos, temp.ypos))
+            HEALTH+=1
+            score+=1
+                    
+    for soldier in soldiers:
+        if( sqrt((playerX - soldier.xpos)**2 + (playerY-soldier.ypos)**2) < (2*infectRange) ):
+            temp = soldiers.pop(soldiers.index(soldier))
+            typeZ = int(random.random()*7)
+            if(typeZ == 3):
+                lungers.append(Lunger(temp.xpos, temp.ypos))
+            if(typeZ == 4):
+                chasers.append(Chaser(temp.xpos, temp.ypos))
+            else:
+                zombies.append(Zombie(temp.xpos, temp.ypos))
+            HEALTH+=1
+            score+=1
 
-	fpsClock.tick(FPS)
-	pygame.display.update()
+    fpsClock.tick(FPS)
+    pygame.display.update()
 
-	if(HEALTH > 10):
-		HEALTH = 10
-		
-	if(playerX < 0):
-		playerX = 0
-	elif(playerX > X_MAX):
-		playerX = X_MAX
-	if(playerY < 0):
-		playerY = 0
-	elif(playerY > Y_MAX):
-		playerY = Y_MAX
-	
-	if(score >=100):
-		msg = "\nZOMBIES HAVE TAKEN OVER THE CITY"
-		print(msg)
-		pygame.event.post(pygame.event.Event(QUIT))
-		
-		
-	if(runClock % FPS*5 == 0):
-		tempX = int(random.random()*X_MAX)
-		HUMANS.append([tempX,0])
+    if(HEALTH > 10):
+        HEALTH = 10
+        
+    if(playerX < 0):
+        playerX = 0
+    elif(playerX > X_MAX):
+        playerX = X_MAX
+    if(playerY < 0):
+        playerY = 0
+    elif(playerY > Y_MAX):
+        playerY = Y_MAX
+    
+    if(score >=100):
+        msg = "\nZOMBIES HAVE TAKEN OVER THE CITY"
+        print(msg)
+        pygame.event.post(pygame.event.Event(QUIT))
+        
+        
+    if(runClock % FPS*5 == 0):
+        tempX = int(random.random()*X_MAX)
+        humans.append(Human(tempX, 0))
