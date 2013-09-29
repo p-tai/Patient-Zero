@@ -23,6 +23,8 @@ HEALTH = 10
 direction = 1
 infectRange = 15
 score = 0
+hunger = 0
+hungertime = 100
 
 windowSurfaceObj = pygame.display.set_mode((X_MAX,Y_MAX))
 
@@ -124,8 +126,15 @@ while True:
         closest = 50
         closeZed = None
         for zombie in zombies:
+            if runClock % (FPS*1) == 0:
+                hunger += 1
+            if hunger >= hungertime:
+                hunger = 0
+                zombies.pop(zombies.index(zombie))
+                continue
             distance = sqrt(((zombie.xpos - human.xpos)**2 + (zombie.ypos-human.ypos)**2))
             if distance < infectRange :
+                hunger = 0
                 temp = humans.pop(humans.index(human))
                 zombies.append(Zombie(temp.xpos, temp.ypos))
                 score+=1
@@ -196,7 +205,14 @@ while True:
         pygame.draw.circle(windowSurfaceObj, blueColor, (lunger.xpos,lunger.ypos),infectRange*2,1)
         windowSurfaceObj.blit(lunger.sprite, lunger.rect)
         for human in humans:
+            if runClock % (FPS*1) == 0:
+                hunger += 1
+            if hunger >= hungertime:
+                hunger = 0
+                lungers.pop(lungers.index(lunger))
+                break
             if( sqrt(((lunger.xpos - human.xpos)**2 + (lunger.ypos-human.ypos)**2)) < (infectRange*2) ):
+                hunger = 0
                 lunger.setPos(human.xpos, human.ypos)
                 score+=1
                 typeZ = int(random.random()*7)
