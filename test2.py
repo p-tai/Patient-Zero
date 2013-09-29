@@ -157,19 +157,26 @@ while True:
         windowSurfaceObj.blit(soldier.sprite, soldier.rect)
         
         if(runClock % (FPS*2) == 0):
-            if(len(chasers) > 0):
-                targetZed = chasers[int(random.random()*len(chasers))]
+            temp = random.random()*(len(chasers) + len(zombies) + len(lungers) + 1)
+            targetZed = random.random()*(len(chasers) + len(zombies) + len(lungers))
+            if(temp == (len(chasers) + len(zombies) + len(lungers))):
+                HEALTH -= 1
+                pygame.draw.line(windowSurfaceObj, redColor, (soldier.xpos, soldier.ypos),(playerX, playerY), 3)
+            elif (targetZed > (len(zombies)+len(lungers))):
+                targetZed = chasers[int(targetZed - len(zombies) - len(lungers))]
                 pygame.draw.line(windowSurfaceObj, redColor, (soldier.xpos, soldier.ypos), (targetZed.xpos,targetZed.ypos), 2)
                 chasers.pop(chasers.index(targetZed))
+            elif targetZed > len(zombies):
+                targetZed = lungers[int(targetZed - len(zombies))]
+                pygame.draw.line(windowSurfaceObj, redColor, (soldier.xpos, soldier.ypos), (targetZed.xpos,targetZed.ypos), 2)
+                lungers.pop(lungers.index(targetZed))
+            elif targetZed < len(zombies):
+                targetZed = zombies[int(targetZed)]
+                pygame.draw.line(windowSurfaceObj, redColor, (soldier.xpos, soldier.ypos), (targetZed.xpos, targetZed.ypos), 2)
+                zombies.pop(zombies.index(targetZed))
             else:
-                target = int(random.random()*((len(zombies) +1)))
-                if (target < len(zombies)):
-                    targetZed = zombies[target]
-                    pygame.draw.line(windowSurfaceObj, redColor, (soldier.xpos, soldier.ypos), (targetZed.xpos, targetZed.ypos), 2)
-                    zombies.pop(zombies.index(targetZed))
-                elif(target >= (len(zombies))):
-                    HEALTH -= 1
-                    pygame.draw.line(windowSurfaceObj, redColor, (soldier.xpos, soldier.ypos),(playerX, playerY), 3)
+                HEALTH -= 1
+                pygame.draw.line(windowSurfaceObj, redColor, (soldier.xpos, soldier.ypos),(playerX, playerY), 3)
                 
             
 
