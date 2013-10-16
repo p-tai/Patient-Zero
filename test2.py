@@ -75,7 +75,7 @@ class Entity(object):
         self.rect.center = (xpos, ypos)
 
 class Zombie(Entity):
-    def __init__(self, xpos, ypos, speed=ZSPEED, sprite=fontObj.render("Z",False,whiteColor)):
+    def __init__(self, xpos, ypos, speed=ZSPEED, sprite=fontObj.render("Z",False,greenColor)):
         super(Zombie, self).__init__(xpos, ypos, speed, sprite)
 
 class Lunger(Zombie):
@@ -190,7 +190,7 @@ while True:
             
 
     for zombie in zombies:
-        pygame.draw.circle(windowSurfaceObj, whiteColor, (zombie.xpos,zombie.ypos),infectRange,1)
+        pygame.draw.circle(windowSurfaceObj, greenColor, (zombie.xpos,zombie.ypos),infectRange,1)
         windowSurfaceObj.blit(zombie.sprite,zombie.rect)
         if len(humans) != 0:
             target = humans[0]
